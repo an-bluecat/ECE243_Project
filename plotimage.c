@@ -311,7 +311,7 @@ void plot_image(int img[], int height, int width){
 		plot_pixel(i, j, p);
 
 		i+=1;		  
-		if (i == 320) {
+		if (i == width) {
 			i = 0;
 			j+=1;
 		}
