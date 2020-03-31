@@ -290,7 +290,7 @@ int main(){
 
     for(int x=0;x<320;x++){//x
 		for(int y=0;y<240;y++){//y
-			int k = 240*y+x;
+			int k = 320*y+x;
 			short int color = marioBG[k];
 			plot_pixel(x, y, color);
 		}
