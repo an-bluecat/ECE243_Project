@@ -65,6 +65,9 @@
     
     
 #include<stdio.h>
+#include <time.h>
+
+
 volatile int *LEDR_ptr = (int *) 0xFF200000;
 volatile int *SW_ptr = (int *) 0xFF200040;
 volatile int *KEY_EDGE_ptr = (int *) 0xFF20005C;
@@ -96,44 +99,61 @@ int main(){
     *(pixel_ctrl_ptr + 1) = 0xC0000000;
     pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
     
+    //clears text
+    clear_video_text(0, 0, 5000);
+    //clears drawings
     clear_screen();
-    char text_top_row[40] = "Intel FPGA\0";
-    video_text(35, 29, text_top_row);
+    
+    char text_top_row[60] = "Enter your characters here, back space to clear:\0";
+    video_text(5, 3, text_top_row);
     int numchar=0;
     int cur=0;
-    while(numchar<5){
+    
+    
+    while(1){
+        
         PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
-        RVALID = PS2_data & 0x8000; // extract the RVALID field
+        RVALID = PS2_data & 0x8000; // extract the RVALID field(read valid)
         if (RVALID) {
             /* shift the next data byte into the display */
             byte1 = byte2;
             byte2 = byte3;
             byte3 = PS2_data & 0xFF;
+            //convert ps2 hex code to char
             int entered=ps2ToChar((int)byte3);
-            if(cur!=entered){
-
+            //write if it's a different letter
+            //byte3!=(0xf0) to prevent bouncing
+            if(cur!=entered && byte3!=(0xf0)){
                 cur=entered;
                 char mychar[2];
                 mychar[0]=entered;
                 mychar[1]='\0';
-                video_text(20, 30, mychar);
-                if(entered==1000){
-                    clear_video_text(20, 30, 100);
+                //write horizontally
+                video_text(5+numchar, 5, mychar);
+                //if entered backspace key, clear
+                if(entered==2000){
+                    clear_video_text(5, 5, 1000);
                 }
                 numchar+=1;
 
                 HEX_PS2(byte1, byte2, byte3);
-                if(numchar==4){
-                    //wait for enter key
-                    if(entered==1000){
-                        clear_video_text(20, 30, 100);
-                        numchar=0;
+                if(numchar>=10){
+                    while(1){
+                    //wait for backspace key to clear
+                        PS2_data = *(PS2_ptr);
+                        byte3 = PS2_data & 0xFF;
+                        entered=ps2ToChar((int)byte3);
+                        if(entered==2000){
+                            clear_video_text(5, 5, 1000);
+                            numchar=0;
+                            break;
+                        }
                     }
                 }
             }
         }
         
-        
+
     }
     
 
@@ -170,6 +190,7 @@ void clear_video_text(int x, int y, int num) {
     }
     *(character_buffer + offset)=0;
 }
+
 
 
 
@@ -264,7 +285,9 @@ int ps2ToChar(int input){
     if(input==0x35)    return 'y';
     if(input==0x1a)    return 'z';
     //this is enter
-    if(input==32)    return 1000;
+    if(input==0x5a)    return 1000;
+    //this is back space
+    if(input==0x66)    return 2000;
     
     else{
         return '\0';
@@ -300,5 +323,15 @@ Y    35    F0,35    UP    E0,75    E0,F0,75
 
 */
 
+void delay(int time){
+    int num=time*100000000000;
+    for(int i=0;i<num;i++){
+        for(int j=0;j<num;j++){
+            num=num-1;
+        }
+        num=num+time*100000;
+    }
+    
+}
 
 
