@@ -168,13 +168,14 @@ volatile int *KEY_EDGE_ptr = (int *) 0xFF20005C;
 volatile char *character_buffer = (char *) 0xC9000000;// VGA character buffer
 volatile int *pixel_ctrl_ptr = (int *) 0xFF203020; // pixel controller
 volatile int pixel_buffer_start;
-int s1[4000] = {0};
 
 
+
+int sd[8][4000];
 
 int main(){
     //takes a while to generate sound!
-    genSound(400);
+    genSound(50);
     
     /* set front pixel buffer to start of FPGA On-chip memory */
     *(pixel_ctrl_ptr + 1) = 0xC8000000; // first store the address in the
@@ -189,7 +190,8 @@ int main(){
     //back buffer
     *(pixel_ctrl_ptr + 1) = 0xC0000000;
     pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
-    
+    clear_screen();
+    wait_for_sync();
 
 
     typing();
@@ -246,27 +248,45 @@ void typing(){
                 mychar[1]='\0';
                 //write horizontally
                 video_text(5+numchar, 5, mychar);
-                //if entered backspace key, clear
-                if(entered==2000){
-                    clear_video_text(5, 5, 1000);
-                }
                 numchar+=1;
-
+                //
                 HEX_PS2(byte1, byte2, byte3);
                 
                 
                 /**************************shake image*/
-                shake_image(cat, 110, 80);
+                //shake_image(cat, 110, 80);
+                
+                //if entered backspace key, clear
+                if(entered==2000){
+                    clear_video_text(5, 5, 1000);
+                }
+                if(entered=='a'||entered=='i'||entered=='q'||entered=='y'){
+                    //play sound!!!
+                    playsound(0);
+                }if(entered=='b'||entered=='j'||entered=='r'||entered=='z'){
+                    //play sound!!!
+                    playsound(1);
+                }if(entered=='c'||entered=='k'||entered=='s'){
+                    //play sound!!!
+                    playsound(2);
+                }if(entered=='d'||entered=='l'||entered=='t'){
+                    playsound(3);
+                }if(entered=='e'||entered=='m'||entered=='u'){
+                    playsound(4);
+                }if(entered=='f'||entered=='n'||entered=='v'){
+                    playsound(5);
+                }if(entered=='g'||entered=='o'||entered=='w'){
+                    playsound(6);
+                }if(entered=='h'||entered=='p'||entered=='x'){
+                    playsound(7);
+                }
+                
+
                 
                 
                 
-                //play sound!!!
-                playsound();
                 
-                
-                
-                
-                
+                //if more than 10: stop until back space
                 if(numchar>=10){
                     while(1){
                     //wait for backspace key to clear
@@ -509,25 +529,27 @@ void delay(int time){
 }
 
 void genSound(int freq) {
-        float acc = 0;
-        //get lower pitch
-        float discrete = (freq*pi*2) / 4000;
-        for (int i = 0 ; i < 400; i++){
-            acc+= discrete;
-            s1[i] = sin(acc) * 20000000000;
-            //printf("%d\n", bob[(j-1)*1000 + i]);
-        }
-    
-        //get higher pitch
-        discrete = ((freq+200)*pi*2) / 4000;
-        for (int i = 0 ; i < 400; i++){
-            acc+= discrete;
-            s1[i+400] = sin(acc) * 20000000000;
-            //printf("%d\n", bob[(j-1)*1000 + i]);
-        }
+    float acc = 0;
+    //get lower pitch
+    float discrete = (freq*pi*2) / 4000;
+    for(int j=0;j<8;j++){
+        float discrete = ((freq+50*j)*pi*2) / 4000;
+            for (int i = 0 ; i < 800; i++){
+                acc+= discrete;
+                sd[j][i]=sin(acc) * 5000000000;
+                //printf("%d\n", bob[(j-1)*1000 + i]);
+            }
+        
+//            //get higher pitch
+//            discrete = ((freq+200+100*j)*pi*2) / 4000;
+//            for (int i = 400 ; i < 800; i++){
+//                acc+= discrete;
+//                sd[j][i]=sin(acc) * 5000000000;
+//            }
+    }
 }
 
-void playsound(){
+void playsound(int i){
     int buffer_index = 0;
     volatile int* red_LED_ptr = (int*)LEDR_BASE;
     volatile int* audio_ptr = (int*)AUDIO_BASE;
@@ -542,14 +564,14 @@ void playsound(){
                 
                 while ((fifospace & 0x00FF0000) && (buffer_index < BUF_SIZE)) {
                     //acc+= x;
-                    *(audio_ptr + 2) = s1[buffer_index];//(int)(sin(acc) * 10000000000);
-                    *(audio_ptr + 3) = s1[buffer_index];//(int)(sin(acc) * 10000000000);
+                    *(audio_ptr + 2) = sd[i][buffer_index];//(int)(sin(acc) * 10000000000);
+                    *(audio_ptr + 3) = sd[i][buffer_index];//(int)(sin(acc) * 10000000000);
                     ++buffer_index;
-                    if (buffer_index == BUF_SIZE) {
-                        // done playback
-                        //play = 0;
-                        //*(red_LED_ptr) = 0x0; // turn off LEDR
-                    }
+//                    if (buffer_index == BUF_SIZE) {
+//                        // done playback
+//                        //play = 0;
+//                        //*(red_LED_ptr) = 0x0; // turn off LEDR
+//                    }
                     fifospace = *(audio_ptr + 1); // read the audio port fifospace register
                 }
             }
