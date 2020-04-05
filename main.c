@@ -168,7 +168,7 @@ volatile int *KEY_EDGE_ptr = (int *) 0xFF20005C;
 volatile char *character_buffer = (char *) 0xC9000000;// VGA character buffer
 volatile int *pixel_ctrl_ptr = (int *) 0xFF203020; // pixel controller
 volatile int pixel_buffer_start;
-
+int allSounds[11]={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 
 
 int sd[8][4000];
@@ -201,14 +201,6 @@ int main(){
     
     return 0;
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -261,24 +253,49 @@ void typing(){
                     clear_video_text(5, 5, 1000);
                 }
                 if(entered=='a'||entered=='i'||entered=='q'||entered=='y'){
-                    //play sound!!!
                     playsound(0);
+                    allSounds[numchar]=0;
                 }if(entered=='b'||entered=='j'||entered=='r'||entered=='z'){
-                    //play sound!!!
                     playsound(1);
+                    allSounds[numchar]=1;
                 }if(entered=='c'||entered=='k'||entered=='s'){
-                    //play sound!!!
                     playsound(2);
+                    allSounds[numchar]=2;
                 }if(entered=='d'||entered=='l'||entered=='t'){
                     playsound(3);
+                    allSounds[numchar]=3;
                 }if(entered=='e'||entered=='m'||entered=='u'){
                     playsound(4);
+                    allSounds[numchar]=4;
                 }if(entered=='f'||entered=='n'||entered=='v'){
                     playsound(5);
+                    allSounds[numchar]=5;
                 }if(entered=='g'||entered=='o'||entered=='w'){
                     playsound(6);
+                    allSounds[numchar]=6;
                 }if(entered=='h'||entered=='p'||entered=='x'){
                     playsound(7);
+                    allSounds[numchar]=7;
+                }
+                
+                
+                //if entered 0, replay all the sounds
+                if(entered=='0'){
+                    //display message
+                    char text[60] = "replaying sound\0";
+                    video_text(5, 10, text);
+                    for(int q=0; q<11;q++){
+                        //if not uninitaialized
+                        if(allSounds[q]!=-1){
+                            playsound(allSounds[q]);
+                        }
+                    }
+                    
+                    
+                    
+                    clear_video_text(5, 5, 1000);
+                    numchar=0;
+                    
                 }
                 
 
@@ -307,6 +324,8 @@ void typing(){
     }
     
 }
+
+
 
 void shake_image(int img[], int screenx, int screeny){
     for(int i=0;i<2;i++){
@@ -478,6 +497,10 @@ int ps2ToChar(int input){
     if(input==0x22)    return 'x';
     if(input==0x35)    return 'y';
     if(input==0x1a)    return 'z';
+    
+    if(input==0x45)    return '0';
+    
+    
     //this is enter
     if(input==0x5a)    return 1000;
     //this is back space
@@ -515,6 +538,7 @@ W    1D    F0,1D    END    E0,69    E0,F0,69
 X    22    F0,22    PG DN    E0,7A    E0,F0,7A
 Y    35    F0,35    UP    E0,75    E0,F0,75
 
+0->45
 */
 
 void delay(int time){
