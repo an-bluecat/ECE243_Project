@@ -2865,6 +2865,8 @@ volatile int *pixel_ctrl_ptr = (int *) 0xFF203020; // pixel controller
 volatile int pixel_buffer_start;
 int allSounds[11]={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 
+//volume
+float volume=1;
 
 int sd[8][4000];
 
@@ -2887,13 +2889,8 @@ int main(){
     pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
     clear_screen();
     wait_for_sync();
-
-
     typing();
 
-    
-
-    
     return 0;
 }
 
@@ -2915,8 +2912,20 @@ void typing(){
     video_text(5, 3, text_top_row);
     int numchar=0;
     int cur=0;
+    int down=0, up=0;
         while(1){
-        
+        check_KEYs(&down, &up);
+        if(down==1){
+          volume=volume*2;
+          printf("down: %d\n",volume);
+          down=0;
+        }
+        if(up==1){
+          volume=volume/2;
+          printf("up: %d\n",volume);
+          up=0;
+        }
+
         PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
         RVALID = PS2_data & 0x8000; // extract the RVALID field(read valid)
         if (RVALID) {
@@ -2928,7 +2937,8 @@ void typing(){
             int entered=ps2ToChar((int)byte3);
             //write if it's a different letter
             //byte3!=(0xf0) to prevent bouncing
-            if(cur!=entered && byte3!=(0xf0)){
+			//byte3!=(0x29) prevent space key
+            if(cur!=entered && byte3!=(0xf0) && byte3!=(0x29)){
                 cur=entered;
                 char mychar[2];
                 mychar[0]=entered;
@@ -2955,7 +2965,6 @@ void typing(){
                 if(entered=='a'||entered=='i'||entered=='q'||entered=='y'){
                     //play sound!!!
                     shapes_widen();
-
                     playsound(0);
                     allSounds[numchar]=0;
                 }if(entered=='b'||entered=='j'||entered=='r'||entered=='z'){
@@ -3042,6 +3051,27 @@ void typing(){
 }
 
 
+void check_KEYs(int * KEY0, int * KEY1) {
+
+	volatile int * KEY_ptr = (int *)KEY_BASE;
+	volatile int * audio_ptr = (int *)AUDIO_BASE;
+	int KEY_value;
+	KEY_value = *(KEY_ptr); // read the pushbutton KEY values
+	while (*KEY_ptr)
+	; // wait for pushbutton KEY release
+	if (KEY_value == 0x1) // check KEY0
+	{
+		*KEY0 = 1;
+      printf("checkkeyskey0\n");
+	} else if (KEY_value == 0x2) // check KEY1
+	{
+		*KEY1 = 1;
+	}
+}
+	
+	
+	
+
 
 void shake_image(int img[], int screenx, int screeny){
 	flush_buffer();
@@ -3109,7 +3139,7 @@ void circleSplit(){
 
 	wait_for_sync(); // swap front and back buffers on VGA vertical sync
 	pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
-	
+
 	plot_image(circleSplit3, 100, 180, 70, 70);
 
 	
@@ -3152,7 +3182,7 @@ void tetrisBoy(){
 
 	wait_for_sync(); // swap front and back buffers on VGA vertical sync
 	pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
-	
+
 	clear_screen();
 	wait_for_sync(); // swap front and back buffers on VGA vertical sync
 	pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
@@ -3544,7 +3574,7 @@ void genSound(int freq) {
         float discrete = ((freq+50*j)*pi*2) / 4000;
             for (int i = 0 ; i < 800; i++){
                 acc+= discrete;
-                sd[j][i]=sin(acc) * 5000000000;
+                sd[j][i]=sin(acc) * 400000000;
                 //printf("%d\n", bob[(j-1)*1000 + i]);
             }
         
@@ -3572,8 +3602,8 @@ void playsound(int i){
                 
                 while ((fifospace & 0x00FF0000) && (buffer_index < BUF_SIZE)) {
                     //acc+= x;
-                    *(audio_ptr + 2) = sd[i][buffer_index];//(int)(sin(acc) * 10000000000);
-                    *(audio_ptr + 3) = sd[i][buffer_index];//(int)(sin(acc) * 10000000000);
+                    *(audio_ptr + 2) = sd[i][buffer_index]*volume;
+                    *(audio_ptr + 3) = sd[i][buffer_index]*volume;//(int)(sin(acc) * 10000000000);
                     ++buffer_index;
 //                    if (buffer_index == BUF_SIZE) {
 //                        // done playback
