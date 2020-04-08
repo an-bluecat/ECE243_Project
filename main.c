@@ -3003,20 +3003,16 @@ void typing(){
                 if(entered=='0'){
                     //display message
                     char text[60] = "replaying sound\0";
-                    video_text(5, 10, text);
+                    video_text(5, 5, text);
                     for(int q=0; q<11;q++){
                         //if not uninitaialized
                         if(allSounds[q]!=-1){
-                            playsound(allSounds[q]);
-							delay();
+                          playsound(allSounds[q]);
+							            delay();
                         }
                     }
-                    
-                    
-                    
                     clear_video_text(5, 5, 1000);
-                    numchar=0;
-                    
+                    numchar=0; 
                 }
                 
 
@@ -3034,12 +3030,29 @@ void typing(){
                         if(entered==2000){
                             clear_video_text(5, 5, 1000);
                             numchar=0;
-							//clear all sounds
-							for(int q=0; q<11;q++){
-								allSounds[q]=-1;
+                        //clear all sounds
+                        for(int q=0; q<11;q++){
+                          allSounds[q]=-1;
                         	}
                             break;
                         }
+                        //if entered 0, replay all the sounds
+                        if(entered=='0'){
+                            //display message
+                            char text[60] = "replaying sound\0";
+                            video_text(5, 5, text);
+                            for(int q=0; q<11;q++){
+                                //if not uninitaialized
+                                if(allSounds[q]!=-1){
+                                  playsound(allSounds[q]);
+                                  delay();
+                                }
+                            }
+                            clear_video_text(5, 5, 1000);
+                            numchar=0; 
+                        }
+
+
                     }
                 }
             }
