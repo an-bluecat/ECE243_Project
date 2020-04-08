@@ -3583,8 +3583,18 @@ void genSound(int freq) {
     float acc = 0;
     //get lower pitch
     float discrete = (freq*pi*2) / 4000;
-    for(int j=0;j<8;j++){
-        float discrete = ((freq+50*j)*pi*2) / 4000;
+    // for(int j=0;j<8;j++){
+    //   if(j=0) freq=26.1;
+    //   if(j=1) freq=29.3;
+    //   if(j=2) freq=32.9;
+    //   if(j=3) freq=34.9;
+    //   if(j=4) freq=39.1;
+    //   if(j=5) freq=44;
+    //   if(j=6) freq=49.3;
+    //   if(j=7) freq=52.3;
+
+    //     float discrete = ((freq)*pi*2) / 4000;
+    float discrete = ((freq+50*j)*pi*2) / 6000;
             for (int i = 0 ; i < 800; i++){
                 acc+= discrete;
                 sd[j][i]=sin(acc) * 400000000;
