@@ -3697,7 +3697,7 @@ void genSound(int freq) {
     float acc = 0;
     //get lower pitch
     float discrete = (freq*pi*2) / 4000;
-    // for(int j=0;j<8;j++){
+     for(int j=0;j<8;j++){
     //   if(j=0) freq=26.1;
     //   if(j=1) freq=29.3;
     //   if(j=2) freq=32.9;
@@ -3715,12 +3715,6 @@ void genSound(int freq) {
                 //printf("%d\n", bob[(j-1)*1000 + i]);
             }
         
-//            //get higher pitch
-//            discrete = ((freq+200+100*j)*pi*2) / 4000;
-//            for (int i = 400 ; i < 800; i++){
-//                acc+= discrete;
-//                sd[j][i]=sin(acc) * 5000000000;
-//            }
     }
 }
 
